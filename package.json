@@ -1,0 +1,48 @@
+{
+  "name": "@frontboi/job-scraper",
+  "version": "1.0.0",
+  "author": "Tom Blanchet <contact@tomblanchet.fr> (https://tomblanchet.fr)",
+  "description": "Scrape the web to find job offers that suits you, with the help of ✨ AI ✨",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "license": "MIT",
+  "files": [
+    "README.md",
+    "package.json",
+    "dist",
+    "types"
+  ],
+  "scripts": {
+    "prepare": "husky",
+    "prepublishOnly": "npx tsc",
+    "demo:linkedin": "npx tsx examples/index.ts"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/frontBOI/job-scraper.git"
+  },
+  "bugs": {
+    "url": "https://github.com/frontBOI/job-scraper/issues"
+  },
+  "homepage": "https://github.com/frontBOI/job-scraper#readme",
+  "devDependencies": {
+    "@trivago/prettier-plugin-sort-imports": "^4.2.1",
+    "@types/lodash": "^4.17.13",
+    "@typescript-eslint/eslint-plugin": "^5.48.1",
+    "eslint": "8.25.0",
+    "eslint-config-airbnb": "^19.0.4",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-unused-imports": "^2.0.0",
+    "husky": "^9.1.6",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "dotenv": "^16.4.5",
+    "lodash": "^4.17.21",
+    "openai": "^4.72.0",
+    "puppeteer": "^23.7.1",
+    "tree-kill": "^1.2.2",
+    "ts-node": "^10.9.2"
+  }
+}
