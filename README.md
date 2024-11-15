@@ -49,7 +49,7 @@ These are the websites scraped by this bot:
 
 - LinkedIn
 
-## Setup
+# Setup
 
 ### OpenAI
 
