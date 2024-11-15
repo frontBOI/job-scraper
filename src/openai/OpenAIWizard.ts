@@ -1,3 +1,5 @@
+import { OpenAIConfiguration } from '../types/openai-wizard'
+
 import OpenAI from 'openai'
 
 export class OpenAIWizard {

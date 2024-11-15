@@ -1,6 +1,6 @@
-type SupportedLanguage = 'fr' | 'en'
+export type SupportedLanguage = 'fr' | 'en'
 
-interface ScraperOptions {
+export interface ScraperOptions {
   country: string
   timeout: number
   cities: string[]
@@ -13,7 +13,7 @@ interface ScraperOptions {
   optimizeUsingOpenAI: OpenAIOptimizationOptions | null
 }
 
-interface ScraperUserDefinedOptions {
+export interface ScraperUserDefinedOptions {
   /**
    * The LinkedIn `li_at` session cookie value. Get this value by logging in to LinkedIn with the account you want to use for scraping.
    * Open your browser's Dev Tools and find the cookie with the name `li_at`. Use that value here.
@@ -83,7 +83,7 @@ interface ScraperUserDefinedOptions {
   optimizeUsingOpenAI?: OpenAIOptimizationOptions
 }
 
-interface OpenAIOptimizationOptions {
+export interface OpenAIOptimizationOptions {
   /**
    * The model to use for OpenAI
    *
@@ -107,11 +107,11 @@ interface OpenAIOptimizationOptions {
   language: SupportedLanguage
 }
 
-interface CreatePageOptions {
+export interface CreatePageOptions {
   preservePreviousPage?: boolean
 }
 
-interface CompleteJob {
+export interface CompleteJob {
   id: string
   name: string
   link: string
@@ -120,9 +120,9 @@ interface CompleteJob {
   validatedByAi?: boolean
 }
 
-type IncompleteJob = Pick<CompleteJob, 'name' | 'id'>
+export type IncompleteJob = Pick<CompleteJob, 'name' | 'id'>
 
-interface ScraperReturnValue {
+export interface ScraperReturnValue {
   allJobsIds: string[]
   rejectedJobs: CompleteJob[]
   validatedJobs: CompleteJob[]

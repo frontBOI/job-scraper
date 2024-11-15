@@ -1,4 +1,4 @@
-interface OpenAIConfiguration {
+export interface OpenAIConfiguration {
   /**
    * The model to use for OpenAI
    *

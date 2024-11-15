@@ -29,6 +29,7 @@ npm install @frontboi/job-scraper
 # Features
 
 This package scrapes multiple websites to help you find your next job, on a quest to find the job that best fits you.
+Entirely developed in Typescript.
 
 ### Traditional scraping
 
@@ -66,10 +67,10 @@ Here is how to use this package.
 ### Scrape LinkedIn
 
 ```typescript
-import { LinkedInCDIScraper } from '@frontboi/job-scraper'
+import { LinkedInJobScraper } from '@frontboi/job-scraper'
 
 async function scrapeLinkedIn() {
-  const scraper = new LinkedInCDIScraper({
+  const scraper = new LinkedInJobScraper({
     headless: true, // false if you want to test locally and see what happens
     country: 'France',
     cities: ['Paris'],

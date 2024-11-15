@@ -1,3 +1,4 @@
+import { SupportedLanguage } from '../types/linkedin-scraper'
 import { log, ScrapProcess } from './logger'
 
 import chalk from 'chalk'

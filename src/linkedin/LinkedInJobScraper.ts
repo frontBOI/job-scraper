@@ -1,9 +1,12 @@
-/*
- * LinkedIn CDI Scraper
- * Un scraper utilisé pour trouver des offres de CDI sur LinkedIn pour ma jeune copine Aude Lejeune.
- * Fortement inspiré de: https://github.com/josephlimtech/linkedin-profile-scraper-api/tree/master
- */
 import { OpenAIWizard } from '../openai/OpenAIWizard'
+import {
+  CompleteJob,
+  CreatePageOptions,
+  IncompleteJob,
+  ScraperOptions,
+  ScraperReturnValue,
+  ScraperUserDefinedOptions,
+} from '../types/linkedin-scraper'
 import { log, ScrapProcess } from '../utils/logger'
 import {
   clearInput,
@@ -22,9 +25,12 @@ import _ from 'lodash'
 import puppeteer, { Browser, Page } from 'puppeteer'
 import treeKill from 'tree-kill'
 
-const LINKEDIN_URL = 'https://www.linkedin.com'
-
-export default class LinkedInCDIScraper {
+/**
+ * Un scraper utilisé pour trouver des offres d'empooi sur LinkedIn, à la base pour ma jeune copine Aude Lejeune.
+ * Fortement inspiré de: https://github.com/josephlimtech/linkedin-profile-scraper-api/tree/master
+ */
+export default class LinkedInJobScraper {
+  private LINKEDIN_URL = 'https://www.linkedin.com'
   readonly options: ScraperOptions = {
     cities: [],
     searchText: '',
@@ -235,7 +241,7 @@ export default class LinkedInCDIScraper {
     // Go to the login page of LinkedIn
     // If we do not get redirected and stay on /login, we are logged out
     // If we get redirect to /feed, we are logged in
-    await page.goto(`${LINKEDIN_URL}/login`)
+    await page.goto(`${this.LINKEDIN_URL}/login`)
     await page.waitForNetworkIdle()
 
     const url = page.url()
@@ -333,7 +339,7 @@ export default class LinkedInCDIScraper {
   public async run(): Promise<ScraperReturnValue> {
     try {
       const page = await this.createPage()
-      page.goto(LINKEDIN_URL)
+      page.goto(this.LINKEDIN_URL)
 
       // ============================================================================================================
       //                                               RECHERCHE
@@ -540,10 +546,10 @@ export default class LinkedInCDIScraper {
    */
   private async scrapeJobPosition(jobId: string): Promise<CompleteJob> {
     const page = await this.createPage({ preservePreviousPage: true })
-    const link = `${LINKEDIN_URL}/jobs/view/${jobId}`
+    const link = `${this.LINKEDIN_URL}/jobs/view/${jobId}`
 
     try {
-      await page.goto(`${LINKEDIN_URL}/jobs/view/${jobId}`)
+      await page.goto(`${this.LINKEDIN_URL}/jobs/view/${jobId}`)
 
       await page.waitForSelector('.job-details-jobs-unified-top-card__job-title')
       await page.waitForSelector('.jobs-description-content__text--stretch')

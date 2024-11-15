@@ -1,1 +1,1 @@
-export { default as LinkedInCDIScraper } from './linkedin/LinkedInCDIScraper'
+export { default as LinkedInJobScraper } from './linkedin/LinkedInJobScraper'

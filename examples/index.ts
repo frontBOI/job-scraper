@@ -1,11 +1,11 @@
-import LinkedInCDIScraper from '../src/linkedin/LinkedInCDIScraper'
+import LinkedInJobScraper from '../src/linkedin/LinkedInJobScraper'
 
 import dotenv from 'dotenv'
 
 dotenv.config()
 
 async function execute() {
-  const scraper = new LinkedInCDIScraper({
+  const scraper = new LinkedInJobScraper({
     headless: true,
     country: 'France',
     cities: ['Paris', 'Bordeaux'],
