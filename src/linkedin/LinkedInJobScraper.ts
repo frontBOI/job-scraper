@@ -90,7 +90,7 @@ export default class LinkedInJobScraper {
   /**
    * Method to load Puppeteer in memory so we can re-use the browser instance.
    */
-  public async setup() {
+  private async setup() {
     try {
       log(ScrapProcess.SETUP, `Launching puppeteer in the ${this.options.headless ? 'background' : 'foreground'}...`)
 
@@ -233,7 +233,7 @@ export default class LinkedInJobScraper {
   /**
    * Simple method to check if the session is still active.
    */
-  public async checkIfLoggedIn() {
+  private async checkIfLoggedIn() {
     const page = await this.createPage()
 
     log(ScrapProcess.SETUP, 'Checking if we are still logged in...')
@@ -338,6 +338,7 @@ export default class LinkedInJobScraper {
    */
   public async run(): Promise<ScraperReturnValue> {
     try {
+      await this.setup()
       const page = await this.createPage()
       page.goto(this.LINKEDIN_URL)
 

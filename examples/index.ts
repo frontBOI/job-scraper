@@ -64,10 +64,7 @@ async function execute() {
     ],
   })
 
-  // Prepare the scraper by loading it in memory
-  await scraper.setup()
   const result = await scraper.run()
-
   console.log(result)
 }
 

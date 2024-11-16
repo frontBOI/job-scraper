@@ -1,11 +1,16 @@
 {
   "name": "@frontboi/job-scraper",
-  "version": "1.0.2",
+  "version": "1.0.8",
   "author": "Tom Blanchet <contact@tomblanchet.fr> (https://tomblanchet.fr)",
   "description": "Scrape the web to find job offers that suits you, with the help of ✨ AI ✨",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "license": "MIT",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    "require": "./dist/cjs/index.js",
+    "import": "./dist/esm/index.js"
+  },
   "files": [
     "README.md",
     "package.json",
@@ -14,7 +19,10 @@
   ],
   "scripts": {
     "prepare": "husky",
-    "prepublishOnly": "npx tsc",
+    "prepublishOnly": "npm run build",
+    "build:esm": "npx tsc --p tsconfig.esm.json",
+    "build:cjs": "npx tsc --p tsconfig.cjs.json",
+    "build": "npm run build:esm && npm run build:cjs",
     "demo:linkedin": "npx tsx examples/index.ts"
   },
   "repository": {
@@ -37,7 +45,7 @@
     "typescript": "^5.6.3"
   },
   "dependencies": {
-    "chalk": "^5.3.0",
+    "chalk": "^4.1.2",
     "dotenv": "^16.4.5",
     "lodash": "^4.17.21",
     "openai": "^4.72.0",

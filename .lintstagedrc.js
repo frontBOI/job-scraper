@@ -1,5 +1,5 @@
 module.exports = {
-  '**/*.(ts|tsx)': 'npx tsc-files --noEmit',
+  '**/*.(ts|tsx)': 'npx tsc-files --p tsconfig.esm.json --noEmit',
 
   // Lint then format TypeScript and JavaScript files
   '**/*.(js|jsx|ts|tsx)': filenames => [
