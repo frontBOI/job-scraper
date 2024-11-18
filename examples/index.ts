@@ -9,9 +9,9 @@ async function execute() {
     headless: true,
     country: 'France',
     cities: ['Paris', 'Bordeaux'],
-    searchText: 'Juriste droit des femmes',
+    searchText: 'Juriste droit des familles',
     sessionCookieValue: `${process.env.LINKEDIN_SESSION_COOKIE_VALUE}`,
-    ...(process.env.LINKEDIN_SESSION_COOKIE_VALUE && {
+    ...(process.env.OPENAI_API_KEY && {
       optimizeUsingOpenAI: {
         language: 'fr',
         model: 'gpt-4o-mini',
@@ -20,6 +20,7 @@ async function execute() {
           "Juriste dont la mission consiste à aider soit des femmes, des étrangers, des familles ou des enfants en difficulité. Tout emploi lié à autre chose qu'une cause sociale ne m'intéresse pas.",
       },
     }),
+    // onLoggedMessage: message => console.log('Forwarded log:', message),
     jobTitleBannedWords: [
       'stage',
       'stagiaire',

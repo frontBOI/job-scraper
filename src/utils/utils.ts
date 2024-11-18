@@ -1,8 +1,8 @@
 import { SupportedLanguage } from '../types/linkedin-scraper'
-import { log, ScrapProcess } from './logger'
+import { Logger, ScrapProcess } from '../types/logger'
 
 import chalk from 'chalk'
-import puppeteer, { BoundingBox, Browser, ElementHandle, Page } from 'puppeteer'
+import { BoundingBox, ElementHandle, Page } from 'puppeteer'
 
 /**
  * Attend un certain temps avant de continuer l'exécution du programme.
@@ -12,57 +12,6 @@ export async function wait(ms: number) {
   return new Promise(resolve => setTimeout(resolve, ms))
 }
 
-/**
- * Crée une instance de navigateur Puppeteer
- * @param debug si `true`, lance le serveur en mode pas headless et en slowMo pour débogage simplifié
- * @returns l'instance susnommée
- */
-export async function createBrowser(debug?: boolean): Promise<Browser> {
-  let browser
-  try {
-    log(ScrapProcess.SETUP, 'Création du navigateur')
-    browser = await puppeteer.launch({
-      headless: !debug,
-      args: ['--disable-setuid-sandbox'],
-      acceptInsecureCerts: true,
-      defaultViewport: { width: 1080, height: 1024 },
-      slowMo: debug ? 250 : 0,
-    })
-
-    if (!browser) {
-      throw new Error('Navigateur est undefined')
-    }
-  } catch (err: any) {
-    log(ScrapProcess.SETUP, `Impossible de créer une instance de navigateur: ${err.message}`, true)
-    process.exit(1)
-  }
-
-  return browser
-}
-
-/**
- * Permet de scraper la page d'accueil de Methem et récupérer les noms des prods non vendues
- * @param browser le navigateur Puppeteer à utiliser
- */
-export async function scrapMethemPage(browser: Browser) {
-  log(ScrapProcess.SETUP, `Scraping de la page ${chalk.yellow('metheM')}`)
-  const page = await browser.newPage()
-  await page.goto('https://methem.fr')
-
-  // on attend que les prods soient chargées
-  await page.waitForSelector('[class^="beat-list_list"] article [class^="beat_meta"]')
-
-  // on récupère les noms des prods qui n'ont pas encore été vendues
-  const names = await page.$$eval('[class^="beat-list_list"] article [class^="beat_meta"]', beats =>
-    beats.map(beat => {
-      if (!beat.querySelector('button')?.disabled) {
-        return beat.querySelector('[class^="beat_beat-name"]')?.textContent
-      }
-    }),
-  )
-
-  console.log(names)
-}
 /**
  * Permet de cocher/décocher une checkbox en fonction de son label sur LinkedIn
  * @param page la page Puppeteer sur laquelle effectuer l'action
@@ -98,7 +47,7 @@ export async function clickOnCheckboxByLabel(page: Page, labelText: string) {
   }, labelText) // faut le passer en paramètre de la fonction evaluate pour qu'il soit dispo dans le DOM au runtime
 
   if (!hasFound) {
-    log(ScrapProcess.RUN, `Impossible de trouver la checkbox avec le label ${labelText}`, true)
+    console.log(chalk.red(`Impossible de trouver la checkbox avec le label ${labelText}`))
   }
 }
 
@@ -228,13 +177,14 @@ export function generateAIQuestion_jobDescription(
 export async function clickOnNextPageButton(
   page: Page,
   method: number,
+  logger: Logger,
 ): Promise<{ hasHitLastPage: boolean; methodThatWorked: number }> {
   let retval = { hasHitLastPage: false, methodThatWorked: method }
   let currentMethod = method
 
   // méthode 1: cliquer sur un bouton dédié
   if (currentMethod === 1) {
-    log(ScrapProcess.RUN, 'Next page button: trying method 1.')
+    logger.log(ScrapProcess.RUN, 'Next page button: trying method 1.')
     try {
       await page.waitForSelector('.jobs-search-pagination__button--next')
       const nextButton = await page.$('.jobs-search-pagination__button--next')
@@ -246,15 +196,15 @@ export async function clickOnNextPageButton(
 
       return retval
     } catch (e: any) {
-      log(ScrapProcess.RUN, e.message, true)
-      log(ScrapProcess.RUN, 'Next page button: method 1 did not work.')
+      logger.log(ScrapProcess.RUN, e.message, { error: true })
+      logger.log(ScrapProcess.RUN, 'Next page button: method 1 did not work.')
       currentMethod++
     }
   }
 
   // méthode 2: cliquer sur le bouton suivant dans la liste des pages (représentée par un nombre)
   if (currentMethod === 2) {
-    log(ScrapProcess.RUN, 'Next page button: trying method 2.')
+    logger.log(ScrapProcess.RUN, 'Next page button: trying method 2.')
     try {
       await page.waitForSelector('.jobs-search-results-list__pagination')
       const hasHitLastPage = await page.$$eval('.jobs-search-results-list__pagination ul li', pageNumbers => {
@@ -278,7 +228,7 @@ export async function clickOnNextPageButton(
 
       return retval
     } catch (e: any) {
-      log(ScrapProcess.RUN, e.message, true)
+      logger.log(ScrapProcess.RUN, e.message, { error: true })
       return { hasHitLastPage: true, methodThatWorked: 2 }
     }
   }

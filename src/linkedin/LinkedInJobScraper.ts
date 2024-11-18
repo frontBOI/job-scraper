@@ -7,7 +7,8 @@ import {
   ScraperReturnValue,
   ScraperUserDefinedOptions,
 } from '../types/linkedin-scraper'
-import { log, ScrapProcess } from '../utils/logger'
+import { Logger, ScrapProcess } from '../types/logger'
+import { BasicLogger } from '../utils/logger'
 import {
   clearInput,
   clickOnCheckboxByLabel,
@@ -19,6 +20,7 @@ import {
 } from '../utils/utils'
 import blockedHostsList from './blocked-hosts'
 import { SessionExpired } from './errors'
+import { ScraperUserDefinedOptionsSchema } from './userOptionsSchema'
 import { getHostname } from './utils'
 
 import _ from 'lodash'
@@ -26,8 +28,8 @@ import puppeteer, { Browser, Page } from 'puppeteer'
 import treeKill from 'tree-kill'
 
 /**
- * Un scraper utilisé pour trouver des offres d'empooi sur LinkedIn, à la base pour ma jeune copine Aude Lejeune.
- * Fortement inspiré de: https://github.com/josephlimtech/linkedin-profile-scraper-api/tree/master
+ * Job scraper used to find job offers on LinkedIn, initially for my beautiful girlfriend but then why not offer it to the web.
+ * Greatly inspired by: https://github.com/josephlimtech/linkedin-profile-scraper-api/tree/master
  */
 export default class LinkedInJobScraper {
   private LINKEDIN_URL = 'https://www.linkedin.com'
@@ -47,38 +49,21 @@ export default class LinkedInJobScraper {
 
   private browser: Browser | null = null
   private aiWizard: OpenAIWizard | null = null
+  private logger: Logger
 
-  constructor(userDefinedOptions: ScraperUserDefinedOptions) {
-    const errorPrefix = 'Error during setup.'
+  constructor(options: ScraperUserDefinedOptions) {
+    this.options = Object.assign(this.options, ScraperUserDefinedOptionsSchema.parse(options))
 
-    if (!userDefinedOptions.sessionCookieValue) {
-      throw new Error(`${errorPrefix} Option "sessionCookieValue" is required.`)
-    }
-    if (userDefinedOptions.sessionCookieValue && typeof userDefinedOptions.sessionCookieValue !== 'string') {
-      throw new Error(`${errorPrefix} Option "sessionCookieValue" needs to be a string.`)
-    }
-    if (userDefinedOptions.userAgent && typeof userDefinedOptions.userAgent !== 'string') {
-      throw new Error(`${errorPrefix} Option "userAgent" needs to be a string.`)
-    }
-    if (userDefinedOptions.timeout !== undefined && typeof userDefinedOptions.timeout !== 'number') {
-      throw new Error(`${errorPrefix} Option "timeout" needs to be a number.`)
-    }
-    if (userDefinedOptions.headless !== undefined && typeof userDefinedOptions.headless !== 'boolean') {
-      throw new Error(`${errorPrefix} Option "headless" needs to be a boolean.`)
-    }
-    if (
-      userDefinedOptions.optimizeUsingOpenAI &&
-      userDefinedOptions.optimizeUsingOpenAI.idealJobDescription.length > 256
-    ) {
-      throw new Error(`${errorPrefix} Your ideal job description is too long. Max 256 characters.`)
-    }
+    this.logger = new BasicLogger({
+      sseOptions: {
+        onLoggedMessage: options.onLoggedMessage,
+        enable: options.onLoggedMessage !== undefined,
+      },
+    })
 
-    this.options = Object.assign(this.options, userDefinedOptions)
-    log(ScrapProcess.SETUP, `Scraper options: ${JSON.stringify(this.options)}`)
-
-    // mise en place de l'IA
+    // setting up ✨ AI ✨
     if (!this.options.optimizeUsingOpenAI) {
-      log(ScrapProcess.SETUP, 'Skipping AI filtering')
+      this.logger.log(ScrapProcess.SETUP, 'Skipping AI filtering')
     } else {
       this.aiWizard = new OpenAIWizard({
         apiKey: this.options.optimizeUsingOpenAI.apiKey,
@@ -92,7 +77,10 @@ export default class LinkedInJobScraper {
    */
   private async setup() {
     try {
-      log(ScrapProcess.SETUP, `Launching puppeteer in the ${this.options.headless ? 'background' : 'foreground'}...`)
+      this.logger.log(
+        ScrapProcess.SETUP,
+        `Launching puppeteer in the ${this.options.headless ? 'background' : 'foreground'}...`,
+      )
 
       this.browser = await puppeteer.launch({
         headless: this.options.headless,
@@ -147,13 +135,13 @@ export default class LinkedInJobScraper {
         timeout: this.options.timeout,
       })
 
-      log(ScrapProcess.SETUP, 'Puppeteer launched!')
+      this.logger.log(ScrapProcess.SETUP, 'Puppeteer launched!')
 
       await this.checkIfLoggedIn()
 
-      log(ScrapProcess.SETUP, 'Logged in !')
+      this.logger.log(ScrapProcess.SETUP, 'Logged in !')
     } catch (err: any) {
-      log(ScrapProcess.SETUP, `An error occurred during setup: ${err.message}`, true)
+      this.logger.log(ScrapProcess.SETUP, `An error occurred during setup: ${err.message}`, { error: true })
       await this.close() // Kill Puppeteer
     }
   }
@@ -224,7 +212,7 @@ export default class LinkedInJobScraper {
 
       return page
     } catch (err: any) {
-      log(ScrapProcess.SETUP, `An error occurred during page setup: ${err.message}`, true)
+      this.logger.log(ScrapProcess.SETUP, `An error occurred during page setup: ${err.message}`, { error: true })
       await this.close() // Kill Puppeteer
       throw err
     }
@@ -236,7 +224,7 @@ export default class LinkedInJobScraper {
   private async checkIfLoggedIn() {
     const page = await this.createPage()
 
-    log(ScrapProcess.SETUP, 'Checking if we are still logged in...')
+    this.logger.log(ScrapProcess.SETUP, 'Checking if we are still logged in...')
 
     // Go to the login page of LinkedIn
     // If we do not get redirected and stay on /login, we are logged out
@@ -248,11 +236,11 @@ export default class LinkedInJobScraper {
     const isLoggedIn = !url.endsWith('/login')
 
     if (isLoggedIn) {
-      log(ScrapProcess.SETUP, 'All good. We are still logged in.')
+      this.logger.log(ScrapProcess.SETUP, 'All good. We are still logged in.')
     } else {
       const errorMessage =
         'Bad news, we are not logged in! Your session seems to be expired. Use your browser to login again with your LinkedIn credentials and extract the "li_at" cookie value for the "sessionCookieValue" option.'
-      log(ScrapProcess.SETUP, errorMessage)
+      this.logger.log(ScrapProcess.SETUP, errorMessage)
       throw new SessionExpired(errorMessage)
     }
   }
@@ -302,29 +290,29 @@ export default class LinkedInJobScraper {
    */
   public async close(page?: Page): Promise<void> {
     if (page) {
-      log(ScrapProcess.CLOSING, 'Closing page...')
+      this.logger.log(ScrapProcess.CLOSING, 'Closing page...')
       await page.close()
-      log(ScrapProcess.CLOSING, 'Page closed.')
+      this.logger.log(ScrapProcess.CLOSING, 'Page closed.')
     }
 
     if (this.browser) {
-      log(ScrapProcess.CLOSING, 'Closing browser...')
+      this.logger.log(ScrapProcess.CLOSING, 'Closing browser...')
       await this.browser.close()
-      log(ScrapProcess.CLOSING, 'Browser closed.')
+      this.logger.log(ScrapProcess.CLOSING, 'Browser closed.')
 
       const browserProcessPid = this.browser.process()?.pid
 
       // Completely kill the browser process to prevent zombie processes
       // https://docs.browserless.io/blog/2019/03/13/more-observations.html#tip-2-when-you-re-done-kill-it-with-fire
       if (browserProcessPid) {
-        log(ScrapProcess.CLOSING, `Killing browser process pid: ${browserProcessPid}...`)
+        this.logger.log(ScrapProcess.CLOSING, `Killing browser process pid: ${browserProcessPid}...`)
 
         treeKill(browserProcessPid, 'SIGKILL', err => {
           if (err) {
             throw new Error(`Failed to kill browser process pid: ${browserProcessPid} (${err.message})`)
           }
 
-          log(ScrapProcess.CLOSING, `Killed browser pid: ${browserProcessPid}. Closed browser.`)
+          this.logger.log(ScrapProcess.CLOSING, `Killed browser pid: ${browserProcessPid}. Closed browser.`)
           return
         })
       }
@@ -348,14 +336,14 @@ export default class LinkedInJobScraper {
       console.log('')
 
       // recherche globale
-      log(ScrapProcess.RUN, `🔥 LOOKING FOR "${this.options.searchText}"`)
+      this.logger.log(ScrapProcess.RUN, `🔥 LOOKING FOR "${this.options.searchText}"`)
       await page.waitForSelector('input[placeholder="Recherche"]')
       await page.type('input[placeholder="Recherche"]', this.options.searchText)
       await page.waitForSelector('::-p-text("Voir tous les résultats")')
       await page.click('::-p-text("Voir tous les résultats")')
 
       // on ne garde que les emplois
-      log(ScrapProcess.RUN, 'Refining search')
+      this.logger.log(ScrapProcess.RUN, 'Refining search')
       await page.waitForSelector('ul.search-reusables__filter-list')
       await page.click('button::-p-text("Emplois")')
 
@@ -367,7 +355,10 @@ export default class LinkedInJobScraper {
 
       // on filtre par ville
       if (this.options.cities.length > 0) {
-        log(ScrapProcess.RUN, `Restraining to following cities: ${this.options.cities.map(c => `"${c}"`).join(', ')}`)
+        this.logger.log(
+          ScrapProcess.RUN,
+          `Restraining to following cities: ${this.options.cities.map(c => `"${c}"`).join(', ')}`,
+        )
         await wait(2000)
         await page.waitForSelector('button::-p-text("Tous les filtres")')
         await page.click('button::-p-text("Tous les filtres")')
@@ -390,7 +381,7 @@ export default class LinkedInJobScraper {
       const jobCardSelector = '.scaffold-layout__list-container li div[data-view-name="job-card"]'
       const incompleteJobs: IncompleteJob[] = []
       do {
-        log(ScrapProcess.RUN, `Gathering opportunities (page ${pageNumber})`)
+        this.logger.log(ScrapProcess.RUN, `Gathering opportunities (page ${pageNumber})`)
         await page.waitForSelector(jobCardSelector)
         await wait(2000) // on laisse bien le temps de charger
         await scrollToBottom(page, '.scaffold-layout__list-container') // on scroll jusqu'à la fin de la liste des jobs pour tous les charger
@@ -407,7 +398,7 @@ export default class LinkedInJobScraper {
 
         incompleteJobs.push(...currentIncompleteJobs)
 
-        const { hasHitLastPage, methodThatWorked } = await clickOnNextPageButton(page, nextPageMethod)
+        const { hasHitLastPage, methodThatWorked } = await clickOnNextPageButton(page, nextPageMethod, this.logger)
         hasNextPage = !hasHitLastPage
         nextPageMethod = methodThatWorked
 
@@ -419,15 +410,15 @@ export default class LinkedInJobScraper {
       // ============================================================================================================
       let filteredIncompleteJobs: IncompleteJob[] = []
       console.log('')
-      log(ScrapProcess.RUN, '⏭ FILTERING')
-      log(ScrapProcess.RUN, `There are ${incompleteJobs.length} job opportunities BEFORE filtering`)
+      this.logger.log(ScrapProcess.RUN, '⏭ FILTERING')
+      this.logger.log(ScrapProcess.RUN, `There are ${incompleteJobs.length} job opportunities BEFORE filtering`)
 
       /**
        * 1. Suppression des offres que l'on ne souhaite explicitement pas traiter
        */
       filteredIncompleteJobs = incompleteJobs.filter(job => !this.options.opportunitiesIdsToSkip?.includes(job.id))
 
-      log(
+      this.logger.log(
         ScrapProcess.RUN,
         `There are ${filteredIncompleteJobs.length} job opportunities AFTER removing opportunities you listed to skip`,
       )
@@ -443,7 +434,7 @@ export default class LinkedInJobScraper {
         return !hasBannedWordInTitle
       })
 
-      log(
+      this.logger.log(
         ScrapProcess.RUN,
         `There are ${filteredIncompleteJobs.length} job opportunities AFTER filtering by banned words`,
       )
@@ -453,7 +444,7 @@ export default class LinkedInJobScraper {
        * Si l'IA est activée, on va demander à l'IA si l'offre d'emploi semble vraiment correspondre à ce qu'on recherche
        */
       if (this.aiWizard) {
-        log(ScrapProcess.RUN, '✨ Using AI to better filter results ✨')
+        this.logger.log(ScrapProcess.RUN, '✨ Using AI to better filter results ✨')
 
         // on va traiter X noms à la fois, l'IA ayant du mal avec un nombre plus important
         const batchSize = 20
@@ -481,19 +472,22 @@ export default class LinkedInJobScraper {
           _.pullAt(filteredIncompleteJobs, indexesToRemove) // suppression des éléments
         }
 
-        log(ScrapProcess.RUN, `There are ${filteredIncompleteJobs.length} job opportunities AFTER filtering with AI`)
+        this.logger.log(
+          ScrapProcess.RUN,
+          `There are ${filteredIncompleteJobs.length} job opportunities AFTER filtering with AI`,
+        )
       }
 
       // ============================================================================================================
       //                                               SCRAPING
       // ============================================================================================================
       console.log('')
-      log(ScrapProcess.RUN, '🔎 SCRAPING')
+      this.logger.log(ScrapProcess.RUN, '🔎 SCRAPING')
 
       // Pour chaque job, récupération des informations qui nous intéressent
       const results: CompleteJob[] = []
       for (const job of filteredIncompleteJobs) {
-        log(
+        this.logger.log(
           ScrapProcess.RUN,
           `⌛️ Scraping job opportunity "${job.name}" ["${job.id}"] (${filteredIncompleteJobs.length - results.length} remaining)`,
         )
@@ -506,11 +500,11 @@ export default class LinkedInJobScraper {
       // ============================================================================================================
       //                                             FINAL RESULTS
       // ============================================================================================================
-      log(
+      this.logger.log(
         ScrapProcess.RUN,
         `${results.filter(r => !r.error && r.validatedByAi !== false).length} validated job opportunities`,
       )
-      log(
+      this.logger.log(
         ScrapProcess.RUN,
         `${results.filter(r => r.error || r.validatedByAi === false).length} opportunities rejected, (${
           results.filter(r => r.validatedByAi === false).length
@@ -530,7 +524,7 @@ export default class LinkedInJobScraper {
         validatedJobs: results.filter(r => !r.error && r.validatedByAi !== false),
       }
     } catch (err: any) {
-      log(ScrapProcess.RUN, `Error while looking for job opportunities: ${err.message}`, true)
+      this.logger.log(ScrapProcess.RUN, `Error while looking for job opportunities: ${err.message}`, { error: true })
       this.close()
 
       return {
@@ -567,7 +561,7 @@ export default class LinkedInJobScraper {
       // utilisation de l'IA pour déterminer si la description correspond réellement
       let validatedByAi = true
       if (this.aiWizard) {
-        log(ScrapProcess.RUN, '✨ Using AI to analize job description ✨"')
+        this.logger.log(ScrapProcess.RUN, '✨ Using AI to analize job description ✨"')
         const question = generateAIQuestion_jobDescription(
           this.options.optimizeUsingOpenAI!.idealJobDescription,
           description,
@@ -576,17 +570,17 @@ export default class LinkedInJobScraper {
 
         const AIAnswer: string | null = await this.aiWizard.ask(question)
         if (AIAnswer === '-1') {
-          log(ScrapProcess.RUN, '❌ AI did not validate job description')
+          this.logger.log(ScrapProcess.RUN, '❌ AI did not validate job description')
           validatedByAi = false
         } else {
-          log(ScrapProcess.RUN, '✅ AI validated job description')
+          this.logger.log(ScrapProcess.RUN, '✅ AI validated job description')
           validatedByAi = true
         }
       }
 
       await page.close()
 
-      log(ScrapProcess.RUN, `✅ Done scraping "${name}"`)
+      this.logger.log(ScrapProcess.RUN, `✅ Done scraping "${name}"`)
 
       return {
         name,
@@ -596,7 +590,7 @@ export default class LinkedInJobScraper {
         ...(!validatedByAi && { validatedByAi: false }),
       }
     } catch (err: any) {
-      log(ScrapProcess.RUN, `❌ Error while scraping: ${err.message}`, true)
+      this.logger.log(ScrapProcess.RUN, `❌ Error while scraping: ${err.message}`, { error: true })
       return {
         link,
         name: '',
