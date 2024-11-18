@@ -15,9 +15,9 @@ async function execute() {
       optimizeUsingOpenAI: {
         language: 'fr',
         model: 'gpt-4o-mini',
-        apiKey: process.env.LINKEDIN_SESSION_COOKIE_VALUE,
+        apiKey: process.env.OPENAI_API_KEY!,
         idealJobDescription:
-          "Juriste pour aider soit les droits des femmes, des étrangers, de la famille ou des enfants. Tout emploi lié à autre chose qu'une cause sociale ne m'intéresse pas.",
+          "Juriste dont la mission consiste à aider soit des femmes, des étrangers, des familles ou des enfants en difficulité. Tout emploi lié à autre chose qu'une cause sociale ne m'intéresse pas.",
       },
     }),
     jobTitleBannedWords: [

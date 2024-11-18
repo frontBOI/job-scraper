@@ -383,7 +383,7 @@ export default class LinkedInJobScraper {
       // préparation pour le traitement page par page
       await wait(4000)
       let pageNumber = 1
-      let nextPageMethod = 2
+      let nextPageMethod = 1
       let hasNextPage = true
 
       // récupération de tous les jobs
@@ -425,7 +425,7 @@ export default class LinkedInJobScraper {
       /**
        * 1. Suppression des offres que l'on ne souhaite explicitement pas traiter
        */
-      filteredIncompleteJobs = incompleteJobs.filter(job => !this.options.opportunitiesIdsToSkip.includes(job.id))
+      filteredIncompleteJobs = incompleteJobs.filter(job => !this.options.opportunitiesIdsToSkip?.includes(job.id))
 
       log(
         ScrapProcess.RUN,

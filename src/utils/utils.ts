@@ -234,7 +234,9 @@ export async function clickOnNextPageButton(
 
   // méthode 1: cliquer sur un bouton dédié
   if (currentMethod === 1) {
+    log(ScrapProcess.RUN, 'Next page button: trying method 1.')
     try {
+      await page.waitForSelector('.jobs-search-pagination__button--next')
       const nextButton = await page.$('.jobs-search-pagination__button--next')
       if (nextButton) {
         await nextButton.click()
@@ -245,15 +247,16 @@ export async function clickOnNextPageButton(
       return retval
     } catch (e: any) {
       log(ScrapProcess.RUN, e.message, true)
-      log(ScrapProcess.RUN, 'Next page button: method 1 did not work. Trying method 2.')
-      method++
+      log(ScrapProcess.RUN, 'Next page button: method 1 did not work.')
+      currentMethod++
     }
   }
 
   // méthode 2: cliquer sur le bouton suivant dans la liste des pages (représentée par un nombre)
   if (currentMethod === 2) {
+    log(ScrapProcess.RUN, 'Next page button: trying method 2.')
     try {
-      retval.methodThatWorked = 2
+      await page.waitForSelector('.jobs-search-results-list__pagination')
       const hasHitLastPage = await page.$$eval('.jobs-search-results-list__pagination ul li', pageNumbers => {
         for (let i = 0; i < pageNumbers.length; i++) {
           if (pageNumbers[i].className.includes('selected')) {
@@ -271,13 +274,14 @@ export async function clickOnNextPageButton(
       })
 
       retval.hasHitLastPage = hasHitLastPage
+      retval.methodThatWorked = 2
+
       return retval
     } catch (e: any) {
       log(ScrapProcess.RUN, e.message, true)
-      log(ScrapProcess.RUN, 'Next page button: method 2 did not work. Trying method 3.')
-      method++
+      return { hasHitLastPage: true, methodThatWorked: 2 }
     }
   }
 
-  throw new Error('No method worked to click on next page button')
+  throw new Error('No method worked to click on the next page button')
 }
