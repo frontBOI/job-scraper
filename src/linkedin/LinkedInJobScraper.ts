@@ -495,7 +495,7 @@ export default class LinkedInJobScraper {
       for (const job of filteredIncompleteJobs) {
         log(
           ScrapProcess.RUN,
-          `⌛️ Scraping job opportunity "${job.name}" (${filteredIncompleteJobs.length - results.length} remaining)`,
+          `⌛️ Scraping job opportunity "${job.name}" ["${job.id}"] (${filteredIncompleteJobs.length - results.length} remaining)`,
         )
 
         const result = await this.scrapeJobPosition(job.id)
