@@ -1,6 +1,6 @@
 {
   "name": "@frontboi/job-scraper",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "author": "Tom Blanchet <contact@tomblanchet.fr> (https://tomblanchet.fr)",
   "description": "Scrape the web to find job offers that suits you, with the help of ✨ AI ✨",
   "license": "MIT",
@@ -14,8 +14,7 @@
   "files": [
     "README.md",
     "package.json",
-    "dist",
-    "src/**/*.d.ts"
+    "dist"
   ],
   "scripts": {
     "prepare": "husky",
@@ -23,7 +22,8 @@
     "build:esm": "npx tsc --p tsconfig.esm.json",
     "build:cjs": "npx tsc --p tsconfig.cjs.json",
     "build": "npm run build:esm && npm run build:cjs",
-    "demo:linkedin": "npx tsx examples/index.ts"
+    "demo:linkedin": "npx tsx examples/linkedin.ts",
+    "demo:humanitarian": "npx tsx examples/humanitarian.ts"
   },
   "repository": {
     "type": "git",

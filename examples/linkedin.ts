@@ -1,4 +1,4 @@
-import LinkedInJobScraper from '../src/linkedin/LinkedInJobScraper'
+import LinkedInJobScraper from '../src/linkedin/linkedin-scraper'
 
 import dotenv from 'dotenv'
 
@@ -6,13 +6,13 @@ dotenv.config()
 
 async function execute() {
   const scraper = new LinkedInJobScraper({
-    headless: true,
+    headless: false,
     country: 'France',
     cities: ['Paris', 'Bordeaux'],
     searchText: 'Juriste droit des familles',
     sessionCookieValue: `${process.env.LINKEDIN_SESSION_COOKIE_VALUE}`,
     ...(process.env.OPENAI_API_KEY && {
-      optimizeUsingOpenAI: {
+      optimizeWithAI: {
         language: 'fr',
         model: 'gpt-4o-mini',
         apiKey: process.env.OPENAI_API_KEY!,

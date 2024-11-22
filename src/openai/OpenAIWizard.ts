@@ -1,4 +1,4 @@
-import { OpenAIConfiguration } from '../types/openai-wizard'
+import { OpenAIConfiguration } from './types'
 
 import OpenAI from 'openai'
 

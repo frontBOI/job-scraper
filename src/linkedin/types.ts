@@ -1,19 +1,15 @@
-export type SupportedLanguage = 'fr' | 'en'
+import { ScraperOptions, ScraperUserDefinedOptions } from '../scraper/types'
 
-export interface ScraperOptions {
+export interface LinkedInScraperOptions extends ScraperOptions {
   country: string
-  timeout: number
   cities: string[]
-  userAgent: string
-  headless: boolean
   searchText: string
   sessionCookieValue: string
   jobTitleBannedWords: string[]
   opportunitiesIdsToSkip: string
-  optimizeUsingOpenAI: OpenAIOptimizationOptions | null
 }
 
-export interface ScraperUserDefinedOptions {
+export interface LinkedInScraperUserDefinedOptions extends ScraperUserDefinedOptions {
   /**
    * The LinkedIn `li_at` session cookie value. Get this value by logging in to LinkedIn with the account you want to use for scraping.
    * Open your browser's Dev Tools and find the cookie with the name `li_at`. Use that value here.
@@ -26,25 +22,6 @@ export interface ScraperUserDefinedOptions {
    * You probably need to get a new session cookie value when the scraper logs show it's not logged in anymore.
    */
   sessionCookieValue: string
-  /**
-   * Set a custom user agent if you like.
-   *
-   * Default: `Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36`
-   */
-  userAgent?: string
-  /**
-   * Use a custom timeout to set the maximum time you want to wait for the scraper
-   * to do his job.
-   *
-   * Default: 10000 (10 seconds)
-   */
-  timeout?: number
-  /**
-   * Start the scraper in headless mode, or not.
-   *
-   * Default: true
-   */
-  headless?: boolean
   /**
    * The country in which you want to search for jobs
    *
@@ -74,48 +51,6 @@ export interface ScraperUserDefinedOptions {
    * Default: []
    */
   jobTitleBannedWords?: string[]
-  /**
-   * You can optimize the results by using OpenAI to find the best job for you: it will be used to read every job title and decide whether it's a good fit for you or not,
-   * based on your "ideal job" description.
-   *
-   * Default: null (no optimization)
-   */
-  optimizeUsingOpenAI?: OpenAIOptimizationOptions
-  /**
-   * This class can work either with Server-Sent Events (SSE) or WebSocket to send real-time updates to a client: this allows the client to display the current state of the
-   * scraping process by receiving messages from the server. Use this method to forward scraping logs to a client for example.
-   *
-   * Default: undefined
-   */
-  onLoggedMessage?: (message: string) => void
-}
-
-export interface OpenAIOptimizationOptions {
-  /**
-   * The model to use for OpenAI
-   *
-   * Default: "gpt-4o-mini"
-   */
-  model?: string
-  /**
-   * The OpenAI API key
-   */
-  apiKey: string
-  /**
-   * In this field, you can describe your ideal job. The scraper will use this description to filter out the jobs that are not a good fit for you.
-   * You can describe what you want, but also what you don't want, so that AI can understand your preferences.
-   *
-   * Max-length: 256 characters
-   */
-  idealJobDescription: string
-  /**
-   * The language in which the ideal job description is written.
-   */
-  language: SupportedLanguage
-}
-
-export interface CreatePageOptions {
-  preservePreviousPage?: boolean
 }
 
 export interface CompleteJob {

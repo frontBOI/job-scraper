@@ -1,17 +1,15 @@
-import { LoggerOptionsSchema } from '../linkedin/userOptionsSchema'
-import { Logger, LoggerOptions, ScrapProcess } from './../types/logger'
+import loggerOptionsSchema from './schemas'
+import { Logger, LoggerOptions, ScrapProcess } from './types'
 
 import chalk from 'chalk'
 
 export class BasicLogger implements Logger {
   private loggerOptions: LoggerOptions = {
-    sseOptions: {
-      enable: false,
-    },
+    onLoggedMessage: undefined,
   }
 
   constructor(options: LoggerOptions) {
-    this.loggerOptions = Object.assign(this.loggerOptions, LoggerOptionsSchema.parse(options))
+    this.loggerOptions = Object.assign(this.loggerOptions, loggerOptionsSchema.parse(options))
   }
 
   log(process: ScrapProcess, message: string, options?: { error?: boolean }) {
@@ -41,8 +39,8 @@ export class BasicLogger implements Logger {
     console.log(colorFunction(`[${process}] ${message}`))
 
     // handling server-sent events
-    if (this.loggerOptions.sseOptions.enable) {
-      this.loggerOptions.sseOptions.onLoggedMessage!(message)
+    if (typeof this.loggerOptions.onLoggedMessage !== 'undefined') {
+      this.loggerOptions.onLoggedMessage!(message)
     }
   }
 }

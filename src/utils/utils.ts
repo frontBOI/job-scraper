@@ -1,8 +1,17 @@
-import { SupportedLanguage } from '../types/linkedin-scraper'
-import { Logger, ScrapProcess } from '../types/logger'
+import { Logger, ScrapProcess } from '../logger/types'
+import { AISupportedLanguage } from '../scraper/types'
 
 import chalk from 'chalk'
 import { BoundingBox, ElementHandle, Page } from 'puppeteer'
+
+/**
+ * Extracts the hostname from a URL.
+ * @param url URL
+ * @returns the hostname
+ */
+export const getHostname = (url: string) => {
+  return new URL(url).hostname
+}
 
 /**
  * Attend un certain temps avant de continuer l'exécution du programme.
@@ -17,10 +26,24 @@ export async function wait(ms: number) {
  * @param page la page Puppeteer sur laquelle effectuer l'action
  * @param label le texte du label de la checkbox à cocher/décocher
  */
-export async function clickOnCheckboxByLabel(page: Page, labelText: string) {
+export async function clickOnLinkedInCheckboxByLabel(page: Page, labelText: string) {
   const hasFound = await page.evaluate(labelText => {
-    const labels = Array.from(document.querySelectorAll('label'))
+    // on cherche la section "Lieu"
+    const sections = Array.from(document.getElementsByClassName('search-reusables__secondary-filters-filter'))
+    let lieuSection
+    for (const section of sections) {
+      const sectionName = section.querySelector('h3.text-heading-large')
+      if (sectionName?.textContent?.trim().replace(/\s+/g, ' ').toLowerCase() === 'lieu') {
+        lieuSection = section
+        break
+      }
+    }
 
+    if (!lieuSection) {
+      throw new Error('Cannot find section named "Lieu"')
+    }
+
+    const labels: HTMLLabelElement[] = Array.from(lieuSection.querySelectorAll('label'))
     const label = labels.find(label =>
       Array.from(label.childNodes).some(e => e.textContent?.replace(/\s+/g, ' ').trim().includes(labelText)),
     )
@@ -49,6 +72,24 @@ export async function clickOnCheckboxByLabel(page: Page, labelText: string) {
   if (!hasFound) {
     console.log(chalk.red(`Impossible de trouver la checkbox avec le label ${labelText}`))
   }
+}
+
+/**
+ * Permet de cocher/décocher une checkbox en fonction de son label, sur CoordinationSud
+ * @param page la page Puppeteer sur laquelle effectuer l'action
+ * @param label le texte du label de la checkbox à cocher/décocher
+ */
+export async function coordinationSud_clickOnCheckboxByLabel(page: Page, labelText: string) {
+  await page.evaluate(labelText => {
+    const divs: HTMLLabelElement[] = Array.from(
+      document.getElementsByClassName('search-filters')[0].querySelectorAll('.facetwp-checkbox'),
+    )
+    const div = divs.find(d =>
+      Array.from(d.childNodes).some(e => e.textContent?.replace(/\s+/g, ' ').trim().includes(labelText)),
+    )
+
+    div?.click()
+  }, labelText) // faut le passer en paramètre de la fonction evaluate pour qu'il soit dispo dans le DOM au runtime
 }
 
 /**
@@ -127,7 +168,7 @@ async function scrollDown(page: Page, boundingBox: BoundingBox): Promise<void> {
 export function generateAIQuestion_jobName(
   idealJobDescription: string,
   jobNames: string[],
-  language: SupportedLanguage,
+  language: AISupportedLanguage,
 ) {
   const part1 = language === 'fr' ? 'Description de mon travail idéal' : 'Description of my ideal job'
   const part2 =
@@ -154,7 +195,7 @@ export function generateAIQuestion_jobName(
 export function generateAIQuestion_jobDescription(
   idealJobDescription: string,
   description: string,
-  language: SupportedLanguage,
+  language: AISupportedLanguage,
 ) {
   const part1 = language === 'fr' ? 'Description de mon travail idéal' : 'Description of my ideal job'
   const part2 =
