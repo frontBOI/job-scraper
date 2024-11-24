@@ -27,7 +27,7 @@ import _ from 'lodash'
  */
 export default class LinkedInJobScraper extends Scraper {
   private LINKEDIN_URL = 'https://www.linkedin.com'
-  readonly options: LinkedInScraperOptions = {
+  protected options: LinkedInScraperOptions = {
     cities: [],
     searchText: '',
     timeout: 10000,

@@ -6,7 +6,7 @@ import {
   CompleteJob,
   HumanitarianScraperOptions,
   HumanitarianScraperUserDefinedOptions,
-  HumanitarianScrapingSources,
+  HumanitarianScrapingSource,
   ScraperReturnValue,
 } from './types'
 
@@ -17,7 +17,7 @@ export default class HumanitarianScraper extends Scraper {
   private COORDINATION_SUD_URL = 'https://www.coordinationsud.org/espace-emploi/'
   private CIDFF_URL = 'https://fncidff.info/postuler/'
 
-  readonly options: HumanitarianScraperOptions = {
+  protected options: HumanitarianScraperOptions = {
     timeout: 10000,
     headless: true,
     userCookies: [],
@@ -136,7 +136,7 @@ export default class HumanitarianScraper extends Scraper {
     return jobNames.map(name => ({
       name,
       id: name, // il n'y a pas d'id sur leur site
-      source: HumanitarianScrapingSources.COORDINATION_SUD,
+      source: HumanitarianScrapingSource.COORDINATION_SUD,
       link: `${this.COORDINATION_SUD_URL}/espace-emploi/${name}`,
     }))
   }
@@ -169,7 +169,7 @@ export default class HumanitarianScraper extends Scraper {
       id: job.name, // il n'y a pas d'id sur leur site
       name: job.name,
       link: job.link,
-      source: HumanitarianScrapingSources.CIDFF,
+      source: HumanitarianScrapingSource.CIDFF,
     }))
   }
 }

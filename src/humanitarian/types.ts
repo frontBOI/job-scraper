@@ -1,12 +1,12 @@
 import { ScraperOptions, ScraperUserDefinedOptions } from '../scraper/types'
 
-export enum HumanitarianScrapingSources {
+export enum HumanitarianScrapingSource {
   COORDINATION_SUD = 'Coordination Sud',
   CIDFF = 'CIDFF',
 }
 
 export interface HumanitarianScraperOptions extends ScraperOptions {
-  opportunitiesIdsToSkip: Pick<CompleteJob, 'id' | 'source'>[]
+  opportunitiesIdsToSkip: CompleteJob[]
 }
 
 export interface HumanitarianScraperUserDefinedOptions extends ScraperUserDefinedOptions {
@@ -16,14 +16,14 @@ export interface HumanitarianScraperUserDefinedOptions extends ScraperUserDefine
    *
    * Default: []
    */
-  opportunitiesIdsToSkip?: Pick<CompleteJob, 'id' | 'source'>[]
+  opportunitiesIdsToSkip?: CompleteJob[]
 }
 
 export interface CompleteJob {
   id: string
   name: string
   link: string
-  source: HumanitarianScrapingSources
+  source: HumanitarianScrapingSource
 }
 
 export type ScraperReturnValue = CompleteJob[]
