@@ -42,6 +42,8 @@ export default class HumanitarianScraper extends Scraper {
   }
 
   private async scrapeCoordinationSud(): Promise<CompleteJob[]> {
+    this.logger.log(ScrapProcess.RUN, 'Scraping Coordination Sud')
+
     const page = await this.createPage()
     page.goto(this.COORDINATION_SUD_URL)
     await page.waitForNetworkIdle()
@@ -49,6 +51,7 @@ export default class HumanitarianScraper extends Scraper {
     // ============================================================================================================
     //                                                FILTRAGE
     // ============================================================================================================
+    this.logger.log(ScrapProcess.RUN, 'Filtering')
     // filtrage
     await page.waitForSelector('::-p-text("Rechercher & filtrer")')
     await page.click('::-p-text("Rechercher & filtrer")')
@@ -86,6 +89,7 @@ export default class HumanitarianScraper extends Scraper {
     // ============================================================================================================
     //                                                  SCRAPING
     // ============================================================================================================
+    this.logger.log(ScrapProcess.RUN, 'Scraping all opportunities')
 
     // préparation pour le traitement page par page
     await wait(2000)
@@ -133,6 +137,7 @@ export default class HumanitarianScraper extends Scraper {
     // ============================================================================================================
     //                                                  RETOUR
     // ============================================================================================================
+    this.logger.log(ScrapProcess.RUN, 'Done')
     return jobNames.map(name => ({
       name,
       id: name, // il n'y a pas d'id sur leur site
@@ -146,6 +151,8 @@ export default class HumanitarianScraper extends Scraper {
    * mémoriser toutes les offres présentées et si une change, je la considère comme nouvelle et je mets à jour la liste des offres.
    */
   private async scrapeCIDFF(): Promise<CompleteJob[]> {
+    this.logger.log(ScrapProcess.RUN, 'Scraping CIDFF opportunites')
+
     const page = await this.createPage()
     page.goto(this.CIDFF_URL)
     await page.waitForNetworkIdle()
@@ -165,6 +172,7 @@ export default class HumanitarianScraper extends Scraper {
     // ============================================================================================================
     //                                                  RETOUR
     // ============================================================================================================
+    this.logger.log(ScrapProcess.RUN, 'Done')
     return allJobs.map(job => ({
       id: job.name, // il n'y a pas d'id sur leur site
       name: job.name,
