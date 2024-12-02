@@ -98,20 +98,22 @@ export default class HumanitarianScraper extends Scraper {
 
     // récupération de tous les jobs
     const jobCardSelector = 'article.post-entry'
-    const jobNames: string[] = []
+    const jobNamesAndLinks: { name: string; link: string }[] = []
     do {
       this.logger.log(ScrapProcess.RUN, `Gathering opportunities (page ${pageNumber})`)
       await wait(4000) // on laisse bien le temps de charger
 
-      const currentJobNames: string[] = await page.$$eval(jobCardSelector, jobCards =>
+      const currentJobNames: { name: string; link: string }[] = await page.$$eval(jobCardSelector, jobCards =>
         jobCards.map(jobCard => {
           const jobName = jobCard.querySelector('header.entry-content-header > h3 > a')?.textContent || 'Unknown'
+          const jobLink =
+            (jobCard.querySelector('header.entry-content-header > h3 > a') as HTMLLinkElement)?.href || 'Unknown'
 
-          return jobName
+          return { name: jobName, link: jobLink }
         }),
       )
 
-      jobNames.push(...currentJobNames)
+      jobNamesAndLinks.push(...currentJobNames)
 
       // click sur next page
       hasNextPage = await page.$eval('.facetwp-pager', pager => {
@@ -138,11 +140,11 @@ export default class HumanitarianScraper extends Scraper {
     //                                                  RETOUR
     // ============================================================================================================
     this.logger.log(ScrapProcess.RUN, 'Done')
-    return jobNames.map(name => ({
+    return jobNamesAndLinks.map(({ name, link }) => ({
       name,
+      link,
       id: name, // il n'y a pas d'id sur leur site
       source: HumanitarianScrapingSource.COORDINATION_SUD,
-      link: `${this.COORDINATION_SUD_URL}/espace-emploi/${name}`,
     }))
   }
 
