@@ -1,8 +1,10 @@
 import { ScraperOptions, ScraperUserDefinedOptions } from '../scraper/types'
 
 export enum HumanitarianScrapingSource {
-  COORDINATION_SUD = 'Coordination Sud',
   CIDFF = 'CIDFF',
+  LA_GUILDE = 'La Guilde',
+  COORDINATION_SUD = 'Coordination Sud',
+  FRANCE_VOLONTAIRE = 'France volontaire',
 }
 
 export interface HumanitarianScraperOptions extends ScraperOptions {
